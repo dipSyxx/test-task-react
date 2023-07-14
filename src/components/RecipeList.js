@@ -126,6 +126,7 @@ export const RecipeList = () => {
               </li>
             ))}
           </ul>
+          {showedRecipes.length === 0 && <h1>No more recipes available.</h1>}
         </InfiniteScroll>
       )}
 
