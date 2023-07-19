@@ -54,6 +54,9 @@ export const RecipeList = () => {
       });
     }
   };
+  useEffect(() => {
+    fetchRecipes(2);
+  }, []);
 
   const handleRecipeClick = (recipe) => {
     navigate(`/recipe/${recipe.id}`);
