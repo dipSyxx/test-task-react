@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useRecipeStore } from "../store/useRecipeStore";
 
-const apiUrl = "https://api.punkapi.com/v2/beers";
+const apiUrl = "https://api.punkapi.com/v2/beers?page=1&per_page=80";
 
 export const RecipeList = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,10 +18,10 @@ export const RecipeList = () => {
     (state) => state.toggleRecipeSelection
   );
 
-  const fetchRecipes = async (pageNum) => {
+  const fetchRecipes = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${apiUrl}?page=${pageNum}`);
+      const response = await fetch(`${apiUrl}`);
       const data = await response.json();
       if (data.length > 0) {
         useRecipeStore.setState((state) => ({
@@ -36,7 +36,7 @@ export const RecipeList = () => {
   };
 
   useEffect(() => {
-    fetchRecipes(1);
+    fetchRecipes();
   }, []);
 
   useEffect(() => {
@@ -54,22 +54,27 @@ export const RecipeList = () => {
       });
     }
   };
-  useEffect(() => {
-    fetchRecipes(2);
-  }, []);
 
-  const handleRecipeClick = (recipe) => {
-    navigate(`/recipe/${recipe.id}`);
-  };
+  const handleRecipeClick = useCallback(
+    (recipe) => {
+      navigate(`/recipe/${recipe.id}`);
+    },
+    [navigate]
+  );
 
-  const handleRightClick = (e, recipe) => {
-    e.preventDefault();
-    toggleRecipeSelection(recipe);
-  };
+  const handleRightClick = useCallback(
+    (e, recipe) => {
+      e.preventDefault();
+      toggleRecipeSelection(recipe);
+    },
+    [toggleRecipeSelection]
+  );
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = useCallback(() => {
     deleteSelectedRecipes();
-  };
+  }, [deleteSelectedRecipes]);
+
+  const memoizedShowedRecipes = useMemo(() => showedRecipes, [showedRecipes]);
 
   return (
     <>
@@ -90,7 +95,7 @@ export const RecipeList = () => {
               rowGap: 70,
             }}
           >
-            {showedRecipes.map((recipe) => (
+            {memoizedShowedRecipes.map((recipe) => (
               <li
                 key={recipe.id}
                 style={{
@@ -129,7 +134,9 @@ export const RecipeList = () => {
               </li>
             ))}
           </ul>
-          {showedRecipes.length === 0 && <h1>No more recipes available.</h1>}
+          {memoizedShowedRecipes.length === 0 && (
+            <h1>No more recipes available.</h1>
+          )}
         </InfiniteScroll>
       )}
 
